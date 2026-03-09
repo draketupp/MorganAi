@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>MorganAi - Family Helper</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --chat-bg: #1e1e1e;
+            --user-bg: #0d6efd;
+            --user-text: white;
+            --bot-bg: #2c2c2c;
+            --bot-text: #e0e0e0;
+            --input-bg: #1e1e1e;
+            --border: #444;
+            --text: #e0e0e0;
+            --suggestion-bg: #333;
+            --copyright: #888;
+            --grok-glow: rgba(29, 155, 255, 0.4);
+            --accent: #1d9bf0;
+            --zoom-scale: 1;
+        }
+        body.light {
+            --bg: #f0f4f8;
+            --chat-bg: white;
+            --user-bg: #1d9bf0;
+            --user-text: white;
+            --bot-bg: #f0f4f8;
+            --bot-text: #0f1419;
+            --input-bg: #ffffff;
+            --border: #e0e0e0;
+            --text: #0f1419;
+            --suggestion-bg: #f7f9fa;
+            --copyright: #536471;
+            --grok-glow: rgba(29, 155, 255, 0.25);
+            --accent: #1d9bf0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0; padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        button, .zoom-btn {
+            touch-action: manipulation;
+        }
+        #chat-container {
+            flex: 1;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--chat-bg);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.4);
+            transform: scale(var(--zoom-scale));
+            transform-origin: top center;
+            transition: transform 0.3s ease;
+            overflow: hidden;
+        }
+        #header {
+            padding: 16px 20px;
+            background: var(--bot-bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        #header-title {
+            font-size: 2.1em;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: grokPulse 4s ease-in-out infinite;
+        }
+        #header-title span.copyright {
+            font-size: 0.65em;
+            color: var(--copyright);
+            font-weight: normal;
+            opacity: 0.85;
+            margin-left: 8px;
+        }
+        @keyframes grokPulse {
+            0%, 100% { text-shadow: 0 0 8px var(--grok-glow); }
+            50%      { text-shadow: 0 0 18px var(--grok-glow), 0 0 28px rgba(29,155,240,0.15); }
+        }
+        #zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .zoom-btn {
+            background: var(--bot-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 1.4em;
+            font-weight: bold;
+            padding: 10px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            min-width: 54px;
+            text-align: center;
+            transition: all 0.18s;
+            touch-action: manipulation;
+        }
+        .zoom-btn:hover, .zoom-btn:active {
+            background: rgba(29,155,240,0.25);
+            transform: scale(1.08);
+        }
+        .zoom-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        #mode-toggle {
+            background: none;
+            border: none;
+            font-size: 2.2em;
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 50%;
+            transition: all 0.18s;
+            touch-action: manipulation;
+        }
+        #mode-toggle:hover, #mode-toggle:active {
+            background: rgba(255,255,255,0.15);
+            transform: scale(1.2);
+        }
+        #chat-history {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 16px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .message {
+            margin: 18px 0;
+            padding: 16px 20px;
+            border-radius: 22px;
+            max-width: 82%;
+            line-height: 1.5;
+            font-size: 1.12em;
+            word-wrap: break-word;
+            opacity: 0;
+            transform: translateY(20px) scale(0.96);
+            animation: messageAppear 0.6s forwards ease-out;
+        }
+        .user {
+            background: var(--user-bg);
+            color: var(--user-text);
+            margin-left: auto;
+            border-bottom-right-radius: 6px;
+        }
+        .bot {
+            background: var(--bot-bg);
+            color: var(--bot-text);
+            border-bottom-left-radius: 6px;
+        }
+        @keyframes messageAppear {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .welcome-text {
+            display: inline-block;
+            opacity: 0;
+            animation: welcomeReveal 2.2s forwards ease-out 0.4s;
+        }
+        @keyframes welcomeReveal {
+            0%   { opacity: 0; transform: scale(0.85); filter: blur(4px); }
+            40%  { opacity: 0.4; transform: scale(1.05); filter: blur(0); }
+            70%  { opacity: 1; transform: scale(0.98); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        #typing-indicator {
+            display: none;
+            padding: 14px 20px;
+            color: var(--bot-text);
+            opacity: 0.9;
+            font-style: italic;
+            font-size: 1.05em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .grok-dots {
+            display: flex;
+            gap: 4px;
+        }
+        .grok-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: grokPulseDot 1.4s infinite ease-in-out;
+            opacity: 0.4;
+        }
+        .grok-dot:nth-child(2) { animation-delay: 0.2s; }
+        .grok-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes grokPulseDot {
+            0%, 100% { transform: scale(1); opacity: 0.4; }
+            50%      { transform: scale(1.4); opacity: 1; }
+        }
+        #input-area {
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            border-top: 1px solid var(--border);
+            background: var(--input-bg);
+            gap: 8px;
+        }
+        #input-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        #user-input {
+            flex: 1;
+            padding: 10px 56px 10px 56px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            font-size: 1.05em;
+            background: var(--input-bg);
+            color: var(--text);
+            outline: none;
+            transition: all 0.25s ease;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
+            min-height: 40px;
+            line-height: 1.3;
+            touch-action: manipulation;
+        }
+        #user-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(29,155,240,0.3), inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        #user-input::placeholder {
+            font-size: 1.05em;
+            opacity: 0.7;
+        }
+        #mic-icon {
+            position: absolute;
+            left: 16px;
+            font-size: 1.6em;
+            color: var(--accent);
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        #send-icon-btn {
+            background: none;
+            border: none;
+            font-size: 1.8em;
+            color: var(--accent);
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 50%;
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            transform: scale(0.92) translateX(4px);
+            pointer-events: none;
+            touch-action: manipulation;
+        }
+        #user-input:not(:placeholder-shown) + #send-icon-btn {
+            opacity: 1;
+            transform: scale(1) translateX(0);
+            pointer-events: auto;
+        }
+        #send-icon-btn:hover {
+            background: rgba(29,155,240,0.12);
+            transform: scale(1.15) translateX(0);
+            box-shadow: 0 0 12px rgba(29,155,240,0.35);
+        }
+        #send-icon-btn:active {
+            background: rgba(29,155,240,0.28);
+            transform: scale(0.88) translateX(0) rotate(15deg);
+            box-shadow: 0 0 16px rgba(29,155,240,0.5);
+        }
+        #suggestions {
+            position: absolute;
+            bottom: 100%;
+            left: 16px;
+            right: 16px;
+            background: var(--suggestion-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            max-height: 220px;
+            overflow-y: auto;
+            list-style: none;
+            padding: 6px 0;
+            margin: 0 0 8px;
+            box-shadow: 0 -4px 16px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: none;
+        }
+        #suggestions li {
+            padding: 14px 20px;
+            cursor: pointer;
+            font-size: 1.05em;
+            transition: background 0.15s;
+            touch-action: manipulation;
+        }
+        #suggestions li:active {
+            background: rgba(29,155,240,0.25);
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="header">
+            <div id="header-title">
+                MorganAi <span class="copyright">copyright © 2026</span>
+            </div>
+            <div id="zoom-controls" role="group" aria-label="Text size adjustment">
+                <button class="zoom-btn" id="zoom-out" aria-label="Decrease text size">A-</button>
+                <button class="zoom-btn active" id="zoom-reset" aria-label="Reset text size">A</button>
+                <button class="zoom-btn" id="zoom-in" aria-label="Increase text size">A+</button>
+            </div>
+            <button id="mode-toggle" aria-label="Toggle theme">🌙</button>
+        </div>
+        <div id="chat-history">
+            <div class="message bot">
+                <span class="welcome-text">Welcome to MorganAi! 👋<br><br>Ask anything about the family — parents, siblings, jobs, school, family tree…</span>
+            </div>
+            <div id="typing-indicator">
+                MorganAi is thinking
+                <div class="grok-dots">
+                    <div class="grok-dot"></div>
+                    <div class="grok-dot"></div>
+                    <div class="grok-dot"></div>
+                </div>
+            </div>
+        </div>
+        <div id="input-area">
+            <div id="input-wrapper">
+                <input id="user-input" type="text" placeholder="Ask anything..." autocomplete="off">
+                <span id="mic-icon">🎤</span>
+                <button id="send-icon-btn">→</button>
+            </div>
+            <ul id="suggestions"></ul>
+        </div>
+    </div>
+
+    <script>
+        const chatHistory = document.getElementById('chat-history');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-icon-btn');
+        const suggestionsList = document.getElementById('suggestions');
+        const modeToggle = document.getElementById('mode-toggle');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const zoomOutBtn = document.getElementById('zoom-out');
+        const zoomResetBtn = document.getElementById('zoom-reset');
+        const zoomInBtn = document.getElementById('zoom-in');
+
+        let currentZoom = 1;
+
+        function setZoom(level) {
+            currentZoom = level;
+            document.documentElement.style.setProperty('--zoom-scale', level);
+            zoomOutBtn.classList.toggle('active', level === 0.8);
+            zoomResetBtn.classList.toggle('active', level === 1);
+            zoomInBtn.classList.toggle('active', level === 1.2);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        zoomOutBtn.onclick = () => setZoom(0.8);
+        zoomResetBtn.onclick = () => setZoom(1);
+        zoomInBtn.onclick = () => setZoom(1.2);
+
+        modeToggle.onclick = () => {
+            document.body.classList.toggle('light');
+            modeToggle.textContent = document.body.classList.contains('light') ? '☀️' : '🌙';
+        };
+
+        userInput.addEventListener('input', () => {
+            const value = userInput.value;
+            const cursorPos = userInput.selectionStart;
+            const textBefore = value.substring(0, cursorPos);
+            const currentWord = textBefore.split(/[\s.,!?;]+/).pop().toLowerCase().trim();
+            suggestionsList.innerHTML = '';
+            suggestionsList.style.display = 'none';
+            if (currentWord.length < 2) return;
+
+            let matches = [];
+            const autoCompleteWords = [
+                "who", "what", "how", "where", "when", "why", "tell", "show", "is", "are",
+                "parents", "parent", "mom", "dad", "mother", "father", "married", "kids", "son", "daughter",
+                "brothers", "brother", "sisters", "sister", "siblings", "family", "tree", "grandparents",
+                "age", "old", "job", "work", "works", "school", "middle", "high", "elementary", "unb", "graduating",
+                "military", "hair", "salon", "michelin", "banking", "firefighter", "charms", "jewelry",
+                "drake", "tupper", "jase", "jaden", "jamma", "jemma", "gray", "alex", "gabe", "amy", "jason", "jen",
+                "amanda", "dave", "ellenwood", "wanda", "alan", "morgan", "margaret", "harold", "corkum", "hutt", "josh", "dustin"
+            ];
+            matches = autoCompleteWords.filter(w => w.startsWith(currentWord));
+
+            const commonMisspellings = {
+                drak: "drake", draek: "drake", drke: "drake",
+                jace: "jase", jasen: "jase",
+                jayden: "jaden", jadyn: "jaden",
+                jama: "jamma", jemma: "jamma",
+                grey: "gray", greay: "gray",
+                alec: "alex",
+                gabe: "gabe",
+                aimee: "amy", amie: "amy",
+                jasson: "jason", jasin: "jason",
+                jenn: "jen", jenny: "jen",
+                amnada: "amanda",
+                wonda: "wanda",
+                allen: "alan", allan: "alan",
+                dustin: "dustin", dusten: "dustin",
+                froofhound: "brown hound", frosthound: "brown hound", greyhound: "brown hound"
+            };
+            Object.keys(commonMisspellings).forEach(wrong => {
+                if (currentWord.includes(wrong) || wrong.startsWith(currentWord)) {
+                    const correct = commonMisspellings[wrong];
+                    if (!matches.includes(correct)) matches.push(correct);
+                }
+            });
+
+            if (matches.length > 0) {
+                matches.slice(0, 10).forEach(match => {
+                    const li = document.createElement('li');
+                    li.textContent = match.charAt(0).toUpperCase() + match.slice(1);
+                    li.onclick = () => {
+                        const parts = value.split(/([\s.,!?;]+)/);
+                        let idx = -1;
+                        for (let i = parts.length - 1; i >= 0; i--) {
+                            if (parts[i].trim().toLowerCase().includes(currentWord)) {
+                                idx = i;
+                                break;
+                            }
+                        }
+                        if (idx >= 0) {
+                            parts[idx] = li.textContent;
+                            userInput.value = parts.join('');
+                            userInput.focus();
+                            userInput.selectionStart = userInput.selectionEnd = userInput.value.length;
+                        }
+                        suggestionsList.style.display = 'none';
+                    };
+                    suggestionsList.appendChild(li);
+                });
+                suggestionsList.style.display = 'block';
+            }
+        });
+
+        document.addEventListener('click', e => {
+            if (!userInput.contains(e.target) && !suggestionsList.contains(e.target)) {
+                suggestionsList.style.display = 'none';
+            }
+        });
+
+        function getReply(input) {
+            const q = input.toLowerCase().trim();
+
+            if (q.includes("jase")) {
+                return "Jase is 12 years old (born ~2014), in middle school. He's outgoing, sporty, competitive — loves soccer and video games. He's the energetic leader type among the siblings.";
+            }
+            if (q.includes("jaden")) {
+                return "Jaden is 9 years old (born ~2017), in elementary school. She's the middle child with 1 brother (Jase) and 1 sister (Jamma, 7 years old). Very energetic and lively — always running around, playing games, full of excitement and never sits still!";
+            }
+            if (q.includes("jamma") || q.includes("jemma")) {
+                return "Jamma is 7 years old (born ~2019), in elementary school. She's peaceful but energetic — gentle, calm, and kind most of the time, but gets happy bursts of bouncy energy when excited (like jumping around happily or playing with enthusiasm).";
+            }
+
+            if (q.includes("drake") || q.includes("me") || q.includes("i am")) {
+                return "Drake Tupper — that's you! You're 11 years old (born July 7, 2014), going to middle school. You love hockey, basketball, and video games. 😄 You're the son of Amy Morgan (Hutt) and Dustin Tupper.";
+            }
+
+            if (q.includes("gray")) {
+                return "Gray Morgan is 18 years old (born ~2008), attending high school and graduating in June 2026. She works the front desk at Hair Expressions right now. In September 2026, she starts at UNB (University of New Brunswick). She's Amy's daughter. Gray is Drake's sister.";
+            }
+
+            if (q.includes("alex")) {
+                return "Alex Morgan (Ellenwood) is 21 years old (born ~2005) and works in the military. He's Amanda and Dave's son.";
+            }
+            if (q.includes("gabe")) {
+                return "Gabe Morgan (Ellenwood) is 20 years old (born ~2006) and works in the military. He's Amanda and Dave's son.";
+            }
+
+            if (q.includes("jason")) {
+                return "Jason Morgan is 42 years old (born ~1984), works at Michelin. He's married to Jen Morgan (41, born ~1985, hair salon owner) and they have 3 kids: Jase (12), Jaden (9), Jamma (7). Marriage date not specified.";
+            }
+            if (q.includes("jen")) {
+                return "Jen Morgan is 41 years old (born ~1985) and owns/runs a hair salon. She's married to Jason Morgan and mom to Jase, Jaden, and Jamma. Marriage date not specified.";
+            }
+
+            if (q.includes("amanda")) {
+                return "Amanda Morgan (Ellenwood) is 44 years old (born ~1982), works in banking. She's married to Dave Ellenwood (44, born ~1982, Royal Canadian Navy). Marriage date not specified. Their kids: Alex (21, military) and Gabe (20, military).";
+            }
+
+            if (q.includes("dave") || q.includes("ellenwood")) {
+                return "Dave Ellenwood is 44 years old (born ~1982) and works in the Royal Canadian Navy (military). He's married to Amanda Morgan (Ellenwood, 44, banking). Marriage date not specified. Their sons are Alex (21, military) and Gabe (20, military).";
+            }
+
+            if (q.includes("amy")) {
+                return "Amy Morgan (Hutt) is 35 years old (born 1991). She works in staffing and at The Brown Hound pub. She's been married to Josh Hutt (34, born ~1992, self-employed trucker) since ~2024. Her kids are Gray Morgan (daughter, 18) and Drake Tupper (son, 11, born July 7, 2014).";
+            }
+            if (q.includes("josh") || (q.includes("amy") && q.includes("husband"))) {
+                return "Josh Hutt is 34 years old (born ~1992). He's self-employed and works in trucking. He and Amy Morgan (Hutt, born 1991) have been married since ~2024.";
+            }
+
+            if (q.includes("dustin") || q.includes("tupper")) {
+                return "Dustin Tupper is Drake Tupper's biological father. He and Amy Morgan (Hutt) are Drake's parents. Drake was born July 7, 2014.";
+            }
+
+            if (q.includes("alan") || q.includes("wanda")) {
+                return "Alan Morgan (64, born ~1962) is married to Wanda Morgan (62, born ~1964, works at Charms Jewelry / Charm Diamond Centres). They were married on June 15, 1980. They have 3 adult children: Amanda, Jason, and Amy. Alan was a firefighter for years and became one again in 2026. Practical, hardworking, straightforward guy — loves fixing things and telling old fire stories. His parents were Margaret Corkum (warm, nurturing, devout Christian, died 2023 after a long illness) and Harold Corkum (stoic, quiet, strong work ethic, died >15 years ago of sudden heart failure). Harold and Margaret were married on October 12, 1958.";
+            }
+
+            if (q.includes("margaret") || q.includes("harold") || q.includes("corkum")) {
+                return "Margaret Corkum and Harold Corkum were Alan Morgan's parents.\n\nMargaret Corkum (Alan's mom) died in 2023 after a long illness. She was married to Harold Corkum on October 12, 1958 (who died more than 15 years ago, before 2008, of sudden heart failure). Margaret was a warm, nurturing, deeply devout Christian woman — gentle, always baking for family gatherings, full of kindness, faith, and Bible wisdom.\nHarold Corkum died before 2008 of sudden heart failure. He was stoic, quiet, old-school — strong work ethic, loved the outdoors and fishing, rarely spoke much but was very reliable, taught Alan toughness and respect.";
+            }
+
+            if (q.includes("tree") || q.includes("family") || q.includes("related")) {
+                return `MorganAi Family Tree (Halifax 2026):\n\nGreat-grandparents:\n• Harold Corkum (stoic, quiet, outdoorsy, strong & reliable, died >15 yrs ago before 2008 of sudden heart failure) m. Margaret Corkum (warm, nurturing, devout Christian, died 2023 after a long illness) — married October 12, 1958\n\nGrandparents:\n• Alan Morgan (64, born ~1962, practical firefighter) m. Wanda Morgan (62, born ~1964, Charms Jewelry) — married June 15, 1980\n └─ Amanda (44, born ~1982, banking) m. Dave Ellenwood (44, born ~1982, Royal Canadian Navy) — married (date not specified) → Alex (21, born ~2005, military), Gabe (20, born ~2006, military)\n └─ Jason (42, born ~1984, Michelin) m. Jen (41, born ~1985, hair salon) — married (date not specified) → Jase (12, born ~2014), Jaden (9, born ~2017), Jamma (7, born ~2019)\n └─ Amy (35, born 1991, staffing + Brown Hound) m. Josh Hutt (34, born ~1992, self-employed trucker) — married ~2024 → Gray Morgan (18, born ~2008, high school/UNB)\n └─ Amy (35, born 1991) & Dustin Tupper → Drake Tupper (11, born July 7, 2014 — you!)\n\nYou're Amy and Dustin Tupper's son — making Gray your full sister!`;
+            }
+            if (q.includes("hi") || q.includes("hey")) return "Hey Drake! What's up? 😊 Ask about anyone in the family!";
+            return "Not sure I caught that — try asking about your parents, brothers/sisters (Gray, Alex, Gabe, Jase, Jaden, Jamma, etc.), jobs, school, or say 'family tree'. Start typing for suggestions!";
+        }
+
+        function addMessage(text, isUser = false) {
+            const div = document.createElement('div');
+            div.className = `message ${isUser ? 'user' : 'bot'}`;
+            div.innerHTML = text;
+            chatHistory.appendChild(div);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            addMessage(text, true);
+            userInput.value = '';
+            suggestionsList.style.display = 'none';
+
+            typingIndicator.style.display = 'flex';
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            setTimeout(() => {
+                typingIndicator.style.display = 'none';
+                addMessage(getReply(text));
+            }, 800 + Math.random() * 600);
+        }
+
+        sendBtn.onclick = sendMessage;
+        userInput.onkeypress = e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+            }
+        };
+
+        window.addEventListener('load', () => {
+            userInput.focus();
+        });
+    </script>
+</body>
+</html>
