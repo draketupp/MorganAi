@@ -2,7 +2,362 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="view<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MorganAi - Family Helper</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --chat-bg: #1e1e1e;
+            --user-bg: #0d6efd;
+            --user-text: white;
+            --bot-bg: #2c2c2c;
+            --bot-text: #e0e0e0;
+            --input-bg: #2c2c2c;
+            --border: #444;
+            --text: #e0e0e0;
+            --suggestion-bg: #333;
+            --copyright: #888;
+        }
+        body.light {
+            --bg: #f0f4f8;
+            --chat-bg: white;
+            --user-bg: #007bff;
+            --user-text: white;
+            --bot-bg: #e9ecef;
+            --bot-text: #333;
+            --input-bg: white;
+            --border: #ddd;
+            --text: #333;
+            --suggestion-bg: #f8f9fa;
+            --copyright: #777;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0; padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #chat-container {
+            flex: 1;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--chat-bg);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.4);
+        }
+        #header {
+            padding: 14px 18px;
+            background: var(--bot-bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #header-title {
+            font-size: 1.5em;           /* ← bigger MorganAi text */
+            font-weight: 700;           /* bolder */
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #header-title span.copyright {
+            font-size: 0.58em;
+            color: var(--copyright);
+            font-weight: normal;
+            opacity: 0.8;
+            margin-left: 4px;
+        }
+        #mode-toggle {
+            background: none;
+            border: none;
+            font-size: 1.6em;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        #mode-toggle:hover, #mode-toggle:active {
+            background: rgba(255,255,255,0.1);
+        }
+        #chat-history {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 16px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .message {
+            margin: 14px 0;
+            padding: 14px 18px;
+            border-radius: 20px;
+            max-width: 82%;
+            line-height: 1.48;
+            font-size: 1.05em;
+            word-wrap: break-word;
+        }
+        .user {
+            background: var(--user-bg);
+            color: var(--user-text);
+            margin-left: auto;
+            border-bottom-right-radius: 6px;
+        }
+        .bot {
+            background: var(--bot-bg);
+            color: var(--bot-text);
+            border-bottom-left-radius: 6px;
+        }
+        #input-area {
+            position: relative;
+            display: flex;
+            padding: 14px 16px;
+            border-top: 1px solid var(--border);
+            background: var(--input-bg);
+            gap: 10px;
+        }
+        #user-input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            font-size: 1.1em;
+            background: var(--input-bg);
+            color: var(--text);
+            outline: none;
+        }
+        #user-input:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13,110,253,0.25);
+        }
+        #send-btn {
+            padding: 14px 26px;
+            background: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 28px;
+            font-size: 1.05em;
+            font-weight: 600;
+            cursor: pointer;
+            min-width: 80px;
+        }
+        #send-btn:active {
+            background: #0b5ed7;
+        }
+        #suggestions {
+            position: absolute;
+            bottom: 100%;
+            left: 16px;
+            right: 16px;
+            background: var(--suggestion-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            max-height: 260px;
+            overflow-y: auto;
+            list-style: none;
+            padding: 8px 0;
+            margin: 0 0 8px;
+            box-shadow: 0 -4px 16px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: none;
+        }
+        #suggestions li {
+            padding: 14px 18px;
+            cursor: pointer;
+            font-size: 1.05em;
+        }
+        #suggestions li:active {
+            background: rgba(13,110,253,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="header">
+            <div id="header-title">
+                MorganAi <span class="copyright">© 2026</span>
+            </div>
+            <button id="mode-toggle" aria-label="Toggle theme">🌙</button>
+        </div>
+        <div id="chat-history">
+            <div class="message bot">Hey Drake! 👋 MorganAi updated.<br><br>• "MorganAi" text is now bigger in the header<br>• Added © 2026 copyright next to it<br><br>Dark mode default, mobile-ready, auto-complete working.<br>Ask anything — parents, siblings, jobs, family tree…</div>
+        </div>
+        <div id="input-area">
+            <input id="user-input" type="text" placeholder="Ask MorganAi anything..." autocomplete="off">
+            <ul id="suggestions"></ul>
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatHistory = document.getElementById('chat-history');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const suggestionsList = document.getElementById('suggestions');
+        const modeToggle = document.getElementById('mode-toggle');
+
+        modeToggle.onclick = () => {
+            document.body.classList.toggle('light');
+            modeToggle.textContent = document.body.classList.contains('light') ? '☀️' : '🌙';
+        };
+
+        userInput.addEventListener('input', () => {
+            const value = userInput.value;
+            const cursorPos = userInput.selectionStart;
+            const textBefore = value.substring(0, cursorPos);
+            const currentWord = textBefore.split(/[\s.,!?;]+/).pop().toLowerCase().trim();
+
+            suggestionsList.innerHTML = '';
+            suggestionsList.style.display = 'none';
+
+            if (currentWord.length < 2) return;
+
+            let matches = [];
+            const autoCompleteWords = [
+                "who", "what", "how", "where", "when", "why", "tell", "show", "is", "are",
+                "parents", "parent", "mom", "dad", "mother", "father", "married", "kids", "son", "daughter",
+                "brothers", "brother", "sisters", "sister", "siblings", "family", "tree", "grandparents",
+                "age", "old", "job", "work", "works", "school", "middle", "high", "elementary", "unb", "graduating",
+                "military", "hair", "salon", "michelin", "banking", "firefighter", "charms", "jewelry",
+                "drake", "tupper", "jase", "jaden", "jamma", "gray", "alex", "gabe", "amy", "jason", "jen",
+                "amanda", "dave", "ellenwood", "wanda", "alan", "morgan", "margaret", "harold", "corkum", "hutt", "josh"
+            ];
+
+            matches = autoCompleteWords.filter(w => w.startsWith(currentWord));
+
+            const commonMisspellings = {
+                drak: "drake", draek: "drake", drke: "drake",
+                jace: "jase", jasen: "jase",
+                jayden: "jaden", jadyn: "jaden",
+                jama: "jamma",
+                grey: "gray", greay: "gray",
+                alec: "alex",
+                gabe: "gabe",
+                aimee: "amy", amie: "amy",
+                jasson: "jason", jasin: "jason",
+                jenn: "jen", jenny: "jen",
+                amnada: "amanda",
+                wonda: "wanda",
+                allen: "alan", allan: "alan",
+                froofhound: "brown hound", frosthound: "brown hound", greyhound: "brown hound"
+            };
+
+            Object.keys(commonMisspellings).forEach(wrong => {
+                if (currentWord.includes(wrong) || wrong.startsWith(currentWord)) {
+                    const correct = commonMisspellings[wrong];
+                    if (!matches.includes(correct)) matches.push(correct);
+                }
+            });
+
+            if (matches.length > 0) {
+                matches.slice(0, 10).forEach(match => {
+                    const li = document.createElement('li');
+                    li.textContent = match.charAt(0).toUpperCase() + match.slice(1);
+                    li.onclick = () => {
+                        const parts = value.split(/([\s.,!?;]+)/);
+                        let idx = -1;
+                        for (let i = parts.length - 1; i >= 0; i--) {
+                            if (parts[i].trim().toLowerCase().includes(currentWord)) {
+                                idx = i;
+                                break;
+                            }
+                        }
+                        if (idx >= 0) {
+                            parts[idx] = li.textContent;
+                            userInput.value = parts.join('');
+                            userInput.focus();
+                            userInput.selectionStart = userInput.selectionEnd = userInput.value.length;
+                        }
+                        suggestionsList.style.display = 'none';
+                    };
+                    suggestionsList.appendChild(li);
+                });
+                suggestionsList.style.display = 'block';
+            }
+        });
+
+        document.addEventListener('click', e => {
+            if (!userInput.contains(e.target) && !suggestionsList.contains(e.target)) {
+                suggestionsList.style.display = 'none';
+            }
+        });
+
+        function getReply(input) {
+            const q = input.toLowerCase().trim();
+            if (q.includes("drake") || q.includes("me") || q.includes("i am")) {
+                return "Drake Tupper — that's you! You're 11 years old, going to middle school. 😄";
+            }
+            if (q.includes("gray")) {
+                return "Gray Tupper is 18 years old, attending high school and graduating in June 2026. She works the front desk at Hair Expressions right now. In September 2026, she starts at UNB (University of New Brunswick). She's Amy's daughter — your sister!";
+            }
+            if (q.includes("alex") || q.includes("alan jr")) {
+                return "Alex Morgan (Ellenwood) is 21 years old and works in the military. He's Amanda and Dave's son — your older brother (Alan Jr.?).";
+            }
+            if (q.includes("gabe")) {
+                return "Gabe Morgan (Ellenwood) is 20 years old and works in the military. He's Amanda and Dave's son — your brother.";
+            }
+            if (q.includes("jase") || q.includes("jaden") || q.includes("jamma")) {
+                return "Jase (12, middle school), Jaden (9, elementary), and Jamma (7, elementary) are your brothers — all kids of Jason and Jen Morgan.";
+            }
+            if (q.includes("amy")) {
+                return "Amy Morgan (Hutt) is 34 years old. She works in staffing and at The Brown Hound pub. She's been married to Josh Hutt for 2 years. Her kids are Gray Tupper (daughter, 18) and you, Drake (son, 11).";
+            }
+            if (q.includes("jason")) {
+                return "Jason Morgan is 42 years old, works at Michelin. He's married to Jen Morgan and they have 3 kids: Jase (12), Drake (11 — you), Jaden (9), Jamma (7).";
+            }
+            if (q.includes("jen")) {
+                return "Jen Morgan is 41 years old and owns/runs a hair salon. She's married to Jason Morgan and mom to Jase, Drake (you), Jaden, and Jamma.";
+            }
+            if (q.includes("amanda")) {
+                return "Amanda Morgan (Ellenwood) is 44 years old, works in banking. She's married to Dave Ellenwood (44, military). Their kids: Alex (21, military) and Gabe (20, military) — your brothers.";
+            }
+            if (q.includes("alan") || q.includes("wanda")) {
+                return "Alan Morgan (63) years old,"born 1963" alan is married to Wanda Morgan (61 years old, "born 1964" Wanda works at Charms Jewelry / Charm Diamond Centres). Alan was a Firefighter for several years, and one again became one in 2026. They had 3 kids: Amanda, Jason, Amy. Alan's mom was Margaret Corkum (passed 2023), dad Harold Corkum (passed >15 years ago) — both Christians.";
+               
+            if (q.includes("tree") || q.includes("family") || q.includes("related")) {
+                return `MorganAi Family Tree (Halifax 2026):\n\nGreat-grandparents:\n• Harold Corkum (passed >15 yrs) & Margaret Corkum (passed 2023) — Christians\n\nGrandparents:\n• Alan Morgan (64, firefighter) m. Wanda Morgan (62, Charms Jewelry)\n  └─ Amanda (44, banking) m. Dave Ellenwood (44, military) → Alex (21, military), Gabe (20, military)\n  └─ Jason (42, Michelin) m. Jen (41, hair salon) → Jase (12, middle), Drake (11, middle — you!), Jaden (9, elem), Jamma (7, elem)\n  └─ Amy (34, staffing + Brown Hound) m. Josh Hutt (2 yrs) → Gray Tupper (daughter, 18, high school/UNB), Drake (son — you)\n\nYou're connected through Amy as mom — making Gray your sister!`;
+            }
+            if (q.includes("hi") || q.includes("hey")) return "Hey Drake! What's up? Ask MorganAi about anyone in the family! 😊";
+            return "Not sure I caught that — try asking about your parents, brothers/sisters (Gray, Alex, Gabe, Jase, etc.), jobs, school, or say 'family tree'. Suggestions help as you type!";
+        }
+
+        function addMessage(text, isUser = false) {
+            const div = document.createElement('div');
+            div.className = `message ${isUser ? 'user' : 'bot'}`;
+            div.innerHTML = text.replace(/\n/g, '<br>');
+            chatHistory.appendChild(div);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+            addMessage(text, true);
+            userInput.value = '';
+            suggestionsList.style.display = 'none';
+            setTimeout(() => addMessage(getReply(text)), 400);
+        }
+
+        sendBtn.onclick = sendMessage;
+        userInput.onkeypress = e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+            }
+        };
+    </script>
+</body>
+</html>port" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>MorganAi - Family Helper</title>
     <style>
         :root {
